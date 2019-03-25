@@ -14,31 +14,47 @@ import it.bz.idm.bdp.dto.RecordDtoImpl;
 import it.bz.idm.bdp.dto.SimpleRecordDto;
 import it.bz.idm.bdp.dto.StationDto;
 import it.bz.idm.bdp.dto.StationList;
-import it.bz.idm.bdp.dto.emobility.ChargingPointsDtoV2;
 import it.bz.idm.bdp.json.JSONPusher;
 import it.bz.idm.bdp.service.dto.ChargerDtoV2;
+import it.bz.idm.bdp.service.dto.ChargingPointsDtoV2;
 
 @Service
 public class ChargePusher extends JSONPusher {
+
+	private static final String E_CHARGING_PLUG_TYPOLOGY = "EChargingPlug";
 
 	private static final String ORIGIN_KEY = "app.dataOrigin";
 
 	@Autowired
 	private Environment env;
+
 	@Override
 	public String initIntegreenTypology() {
 		return "EChargingStation";
 	}
+	private static final List<DataTypeDto> EMOBILTYTYPES = new ArrayList<DataTypeDto>() {
+		private static final long serialVersionUID = 1L;
+
+	{
+	    add(new DataTypeDto("number-available","","number of available vehicles / charging points","Instantaneous"));
+	    add(new DataTypeDto("echarging-plug-status","","the state can either be 0, which means that the plug is currently not available, or it can be 1 which means it is",""));
+	}};;
 
 	@Override
 	public <T> DataMapDto<RecordDtoImpl> mapData(T rawData) {
+		if (rawData == null)
+			return null;
+
 		@SuppressWarnings("unchecked")
 		List<ChargerDtoV2> data = (List<ChargerDtoV2>) rawData;
-		if (data == null)
-			return null;
 		DataMapDto<RecordDtoImpl> map = new DataMapDto<>();
 		Date now = new Date();
-		for(ChargerDtoV2 dto: data ){
+
+		for(ChargerDtoV2 dto : data) {
+
+			if ("REMOVED".equals(dto.getState()))
+				continue;
+
 			DataMapDto<RecordDtoImpl> recordsByType = new DataMapDto<RecordDtoImpl>();
 			Integer availableStations=0;
 			for (ChargingPointsDtoV2 point:dto.getChargingPoints()){
@@ -58,7 +74,11 @@ public class ChargePusher extends JSONPusher {
 
 	public StationList map2bdp(List<ChargerDtoV2> fetchedSations) {
 		StationList stations = new StationList();
-		for (ChargerDtoV2 dto : fetchedSations){
+		for (ChargerDtoV2 dto : fetchedSations) {
+
+			if ("REMOVED".equals(dto.getState()))
+				continue;
+
 			StationDto s = new StationDto();
 			s.setId(dto.getId());
 			s.setLongitude(dto.getLongitude());
@@ -77,6 +97,7 @@ public class ChargePusher extends JSONPusher {
 			s.getMetaData().put("accessType",dto.getAccessType());
 			s.getMetaData().put("categories",dto.getCategories());
 			s.setOrigin(env.getProperty(ORIGIN_KEY));
+			s.setStationType(this.integreenTypology);
 			stations.add(s);
 		}
 		return stations;
@@ -93,9 +114,10 @@ public class ChargePusher extends JSONPusher {
 				s.setLongitude(dto.getLongitude());;
 				s.setLatitude(dto.getLatitude());
 				s.setName(dto.getName()+"-"+point.getId());
-				s.setParentId(dto.getCode());
+				s.setParentStation(dto.getCode());
 				s.getMetaData().put("outlets",point.getOutlets());
 				s.setOrigin(env.getProperty(ORIGIN_KEY));
+				s.setStationType(E_CHARGING_PLUG_TYPOLOGY);
 				stations.add(s);
 			}
 		}
@@ -121,5 +143,9 @@ public class ChargePusher extends JSONPusher {
 			}
 		}
 		return map;
+	}
+
+	public List<DataTypeDto> getDataTypes(){
+		return EMOBILTYTYPES;
 	}
 }

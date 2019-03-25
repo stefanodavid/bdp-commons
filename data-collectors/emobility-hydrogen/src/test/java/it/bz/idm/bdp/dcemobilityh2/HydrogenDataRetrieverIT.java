@@ -52,6 +52,7 @@ public class HydrogenDataRetrieverIT extends AbstractJUnit4SpringContextTests {
             LOG.error(msg, e);
             Assert.fail(msg);
         }
+
     }
 
     private static final String TEST_FILE_FETCH = "/test_data/test_data_fetch.xml";
@@ -65,7 +66,6 @@ public class HydrogenDataRetrieverIT extends AbstractJUnit4SpringContextTests {
     public static final String DATA_FETCH = "FETCH";
     public static final String DATA_PUSH  = "PUSH";
 
-  
 
     @Test
     public void testConvertStationMeasurements() {
@@ -200,7 +200,7 @@ public class HydrogenDataRetrieverIT extends AbstractJUnit4SpringContextTests {
     public static void checkEquals(Object o1, Object o2, StringBuffer sb, String errMsg) {
         if ( o1 == o2 ) {
             return;
-        } 
+        }
         if ( o1!=null && o2==null ) {
             sb.append(" - "+errMsg);
             return;

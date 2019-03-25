@@ -17,13 +17,11 @@ import it.bz.idm.bdp.dto.DataMapDto;
 import it.bz.idm.bdp.dto.RecordDtoImpl;
 import it.bz.idm.bdp.dto.SimpleRecordDto;
 import it.bz.idm.bdp.dto.StationDto;
-import it.bz.idm.bdp.dto.parking.ParkingStationDto;
 
 @Service
 public class ParkingClient {
 	private String origin;
 	private static final String PROTOCOLL = "http://";
-	private static final String P_GUIDE_GET_NUMBER_OF_PARKINGPLACES = "pGuide.getNumeroParcheggi";
 	private static final String P_GUIDE_GET_PARKING_METADATA = "pGuide.getCaratteristicheParcheggio";
 	private static final String P_GUIDE_GET_FREE_SLOTS = "pGuide.getPostiLiberiParcheggio";
 	private static final String P_GUIDE_GET_VERSION = "pGuide.getVersion";
@@ -35,8 +33,8 @@ public class ParkingClient {
 	private static final int XMLRPCREPLYTIMEOUT = 10000;
 	private static final int XMLRPCCONNECTIONTIMEOUT = 8000;
 	private static final String P_GUIDE_GET_POSTI_LIBERI_PARCHEGGIO_EXT = "pGuide.getPostiLiberiParcheggioExt";
-
 	private XmlRpcClient client;
+	private static final String OCCUPIED_TYPE = "occupied";
 
 	@Autowired
 	public ParkingClient(@Value("${pbz_origin}") String origin,
@@ -101,18 +99,14 @@ public class ParkingClient {
 			metaDataParkingPlace = Arrays.asList(getArray(P_GUIDE_GET_PARKING_METADATA, pParams));
 			stationDto.setId(metaDataParkingPlace.get(0).toString());
 			stationDto.setName(metaDataParkingPlace.get(1).toString());
-			stationDto.getMetaData().put("slots",Integer.valueOf(metaDataParkingPlace.get(2).toString()));
+			stationDto.getMetaData().put("capacity",Integer.valueOf(metaDataParkingPlace.get(2).toString()));
+			stationDto.getMetaData().put("municipality", "Bozen - Bolzano");
 			stationDto.setOrigin(origin);
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
 		}
 
 		return stationDto;
-	}
-
-
-	public Integer getNumberOfConfiguredParkinPlaces() throws XmlRpcException {
-		return getInteger(P_GUIDE_GET_NUMBER_OF_PARKINGPLACES);
 	}
 
 	public Integer[] getIdentifiersOfParkingPlaces() throws XmlRpcException {
@@ -152,12 +146,8 @@ public class ParkingClient {
 		return null;
 	}
 	public Integer[] getIdentifers() {
-		Integer numberOfConfiguredParkinPlaces;
 		try {
-			numberOfConfiguredParkinPlaces = this.getNumberOfConfiguredParkinPlaces();
-			Integer[] identifiersOfParkinPlaces = this.getIdentifiersOfParkingPlaces();
-			if (identifiersOfParkinPlaces != null && identifiersOfParkinPlaces.length == numberOfConfiguredParkinPlaces)
-				return identifiersOfParkinPlaces;
+			return this.getIdentifiersOfParkingPlaces();
 
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
@@ -168,7 +158,10 @@ public class ParkingClient {
 		Integer[] identifers = this.getIdentifers();
 		if (identifers!=null){
 			for (Integer identifier:identifers){
+				StationDto parkingMetaData = getParkingMetaData(identifier);
+				Integer capacity = (Integer) parkingMetaData.getMetaData().get("capacity");
 				List<Object> objects = this.getData(identifier);
+				DataMapDto<RecordDtoImpl> typeMap = new DataMapDto<>();
 				DataMapDto<RecordDtoImpl> dataMap = new DataMapDto<>();
 				List<RecordDtoImpl> records = new ArrayList<RecordDtoImpl>();
 				SimpleRecordDto record = new SimpleRecordDto();
@@ -179,11 +172,15 @@ public class ParkingClient {
 					Boolean inactiveAllarm = Byte.valueOf(objects.get(12).toString())==1?true:false;
 					Boolean occupiedSlotsAllarm = Byte.valueOf(objects.get(13).toString())==1?true:false;
 					if(!communicationState && !controlUnit && !totalChangeAllarm && !inactiveAllarm && !occupiedSlotsAllarm) {
-						record.setValue(objects.get(5));
+						record.setValue(capacity - (Integer)objects.get(5));
 						record.setTimestamp((Integer) objects.get(6)*1000l);
+						record.setPeriod(600);
 						records.add(record);
 						dataMap.setData(records);
-						sMap.getBranch().put(identifier.toString(), dataMap);
+						if (typeMap.getBranch().get(OCCUPIED_TYPE) == null)
+							typeMap.getBranch().put(OCCUPIED_TYPE, dataMap);
+						if (sMap.getBranch().get(identifier.toString()) == null)
+							sMap.getBranch().put(identifier.toString(),typeMap);
 					}
 				}
 
@@ -200,5 +197,5 @@ public class ParkingClient {
 					stations.add(parkingMetaData);
 			}
 		}
-	}		
+	}
 }

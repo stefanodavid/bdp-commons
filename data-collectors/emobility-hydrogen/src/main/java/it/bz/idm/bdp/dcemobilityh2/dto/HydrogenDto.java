@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import it.bz.idm.bdp.dto.StationDto;
-import it.bz.idm.bdp.dto.emobility.ChargingPointsDtoV2;
-import it.bz.idm.bdp.dto.emobility.EchargingStationDto;
 
 public class HydrogenDto implements Serializable {
 
@@ -42,7 +40,7 @@ public class HydrogenDto implements Serializable {
         return station;
     }
 
-    public void setStation(EchargingStationDto station) {
+    public void setStation(StationDto station) {
         this.station = station;
     }
 

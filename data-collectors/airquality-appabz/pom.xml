@@ -1,16 +1,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.bz.idm.bdp</groupId>
-	<artifactId>bdp-airquality</artifactId>
+	<artifactId>dc-airquality-appabz</artifactId>
 	<version>1.0.1</version>
 	<packaging>war</packaging>
 	<name>AirQuality data collector</name>
 	<properties>
 		<java.version>8</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.0.10.RELEASE</spring.version>
+		<spring.version>5.0.12.RELEASE</spring.version>
 	</properties>
-
+	<repositories>
+                <repository>
+                        <id>maven-repo.opendatahub.bz.it</id>
+                        <url>http://it.bz.opendatahub.s3-website-eu-west-1.amazonaws.com/release</url>
+                </repository>
+        </repositories>
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.antlr/antlr4: Parser generator-->
 		<dependency>
@@ -71,6 +76,11 @@
 			<artifactId>spring-aspects</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-web</artifactId>
+		    <version>${spring.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -96,6 +106,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.21.0</version>
+				<configuration>
+                                        <useSystemClassLoader>false</useSystemClassLoader>
+                                </configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

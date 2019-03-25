@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.bz.idm.bdp</groupId>
-	<artifactId>parking-dc</artifactId>
+	<artifactId>dc-parking-MeBo</artifactId>
 	<packaging>war</packaging>
 	<version>1.0.0</version>
 	<name>Parking datacollector</name>
@@ -14,6 +14,12 @@
 		<spring.version>4.3.20.RELEASE</spring.version>
 		<xmlrpc.version>3.1.2</xmlrpc.version>
 	</properties>
+	<repositories>
+		<repository>
+			<id>maven-repo.opendatahub.bz.it</id>
+			<url>http://it.bz.opendatahub.s3-website-eu-west-1.amazonaws.com/release</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>it.bz.idm.bdp</groupId>
@@ -115,7 +121,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>dc-parking-famas</finalName>
+		<finalName>dc-parking-MeBo</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -132,6 +138,14 @@
 					<target>${java.version}</target>
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.21.0</version>
+				<configuration>
+					<useSystemClassLoader>false</useSystemClassLoader>
+		                </configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
